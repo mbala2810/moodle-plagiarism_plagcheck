@@ -1,0 +1,5 @@
+{
+    "require": {
+        "tga/simhash-php": "^2.0"
+    }
+}
