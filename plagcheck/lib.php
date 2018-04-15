@@ -4,6 +4,7 @@ require_once($CFG->dirroot.'/plagiarism/lib.php');
 use Tga\SimHash\Fingerprint;
 global $plagcheckacceptedfiles;
 
+//Given the content, generate the simhash and store it in table plagiarism_plagcheck
 function generateSimhash($fileContent) {
 	$simhash = new \Tga\SimHash\SimHash();
 	$extractor = new \Tga\SimHash\Extractor\SimpleTextExtractor();
@@ -11,35 +12,38 @@ function generateSimhash($fileContent) {
 	$fileData = $simhash->hash($extractor->extract($fileContent), \Tga\SimHash\SimHash::SIMHASH_64);
 	return $fileData->getDecimal();
 }
+
+/*After simhash has been generated, calculated simliarity scores for each file by
+ *comparing them with every other file of same course and assignment ids
+ */
 function getSimilarity($records) {
 	$simhash = new \Tga\SimHash\SimHash();
 	$extractor = new \Tga\SimHash\Extractor\SimpleTextExtractor();
 	$comparator = new Tga\SimHash\Comparator\GaussianComparator(3);
-	//echo sizeof($record);
 	$i = 0;
 	foreach($records as $record) {
 		$max = 0;
 		$index = 0;
 		$hash1 = new Fingerprint(sizeof($record->simhash),$record->simhash);
-		//echo $record->simhash;
-		//$similarity[$i]['itemid'] = $record[$i]['itemid'];
 		foreach($records as $recordinner){
 			if($recordinner->id != $record->id && $recordinner->userid != $record->userid){
 				$hash2 = new Fingerprint(sizeof($recordinner->simhash),$recordinner->simhash);
 				$plag = $comparator->compare($hash1,$hash2);
 				if($plag > $max){
 					$max = $plag;
-					$index = $recordinner->itemid;
+					$index = $recordinner->identifier;
 				}
 			}
 		}
 		$record->similarityscore = $max;
-		$record->copyfilename = (string)$index;
+		$record->copyfilename = $index;
 		insertIntoTable($record);
 		$i++;
 	}
 	return;
 }
+
+//Given a record, enter it into the plagiarism_plagcheck table
 function insertIntoTable($record) {
 	global $DB, $CFG;
 	$plagiarismfile = new stdClass();
@@ -55,10 +59,7 @@ function insertIntoTable($record) {
 	$plagiarismfile->assignmentid = $record->assignmentid;
 	$plagiarismfile->courseid = $record->courseid;
 	$plagiarismfile->copyfilename = $record->copyfilename;
-	//echo $plagiarismfile->identifier;
-	//$DB->delete_records('plagiarism_plagcheck', array('identifier' => $plagiarismfile->identifier));
 	$DB->update_record('plagiarism_plagcheck', $plagiarismfile, false);
-	//$fileid = $DB->insert_record('plagiarism_plagcheck', $plagiarismfile);
 }
 class plagiarism_plugin_plagcheck extends plagiarism_plugin {
 	public function update_status($course, $cm) {
@@ -68,7 +69,6 @@ class plagiarism_plugin_plagcheck extends plagiarism_plugin {
 		return 'mod/assign:grade';
 	}
 	public function get_links($linkarray) {
-		// Set static variables.
 		global $DB;
         static $cm;
         if (empty($cm)) {
@@ -94,8 +94,14 @@ class plagiarism_plugin_plagcheck extends plagiarism_plugin {
         $plagiarismfile = current($plagiarismfiles);
 		if($plagiarismfile) {
 			$transmatch = '';
-			$score = ($plagiarismfile->similarityscore * 100).'%';
-	        $titlescore = ($plagiarismfile->similarityscore * 100).'% '.get_string('similarity', 'plagiarism_plagcheck');
+			$fs = get_file_storage();
+			$file = $fs->get_file_by_hash($plagiarismfile->copyfilename);
+			$filename = $file->get_filename();
+			$records = $DB->get_record('plagiarism_plagcheck', array('identifier' => $plagiarismfile->copyfilename));
+			$copiedfrom = $DB->get_record('user', array('id' => $records->userid));
+			$copyuser = $copiedfrom->firstname.' '.$copiedfrom->lastname;
+			$score = ($plagiarismfile->similarityscore * 100).'%'.'<br>'.($filename).'<br>'.($copyuser);
+	        $titlescore = ($plagiarismfile->similarityscore * 100).'% '.'<br>'.($filename).'<br>'.($copyuser).get_string('similarity', 'plagiarism_plagcheck');
 	        $class = 'score_colour_'.round($plagiarismfile->similarityscore, -1);
 			$orscorehtml = html_writer::tag('div', $score.$transmatch,
 	                                                array('title' => $titlescore));
