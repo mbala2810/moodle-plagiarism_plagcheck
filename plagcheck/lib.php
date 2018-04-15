@@ -17,6 +17,7 @@ function generateSimhash($fileContent) {
  *comparing them with every other file of same course and assignment ids
  */
 function getSimilarity($records) {
+	global $DB;
 	$simhash = new \Tga\SimHash\SimHash();
 	$extractor = new \Tga\SimHash\Extractor\SimpleTextExtractor();
 	$comparator = new Tga\SimHash\Comparator\GaussianComparator(3);
@@ -25,6 +26,12 @@ function getSimilarity($records) {
 		$max = 0;
 		$index = 0;
 		$hash1 = new Fingerprint(sizeof($record->simhash),$record->simhash);
+		//If the submitter has deleted his existing submission and added a new submission, so we have to delete the existing one.
+		$checkrecord = $DB->get_record('files', array('pathnamehash' => $record->identifier, 'component' => 'assignsubmission_file'));
+		if(!$checkrecord) {
+			$DB->delete_records('plagiarism_plagcheck', array('identifier' => $record->identifier));
+			continue;
+		}
 		foreach($records as $recordinner){
 			if($recordinner->id != $record->id && $recordinner->userid != $record->userid){
 				$hash2 = new Fingerprint(sizeof($recordinner->simhash),$recordinner->simhash);
@@ -96,6 +103,9 @@ class plagiarism_plugin_plagcheck extends plagiarism_plugin {
 			$transmatch = '';
 			$fs = get_file_storage();
 			$file = $fs->get_file_by_hash($plagiarismfile->copyfilename);
+			if($file === false) {
+				return;
+			}
 			$filename = $file->get_filename();
 			$records = $DB->get_record('plagiarism_plagcheck', array('identifier' => $plagiarismfile->copyfilename));
 			$copiedfrom = $DB->get_record('user', array('id' => $records->userid));

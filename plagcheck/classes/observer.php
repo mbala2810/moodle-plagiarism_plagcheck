@@ -30,12 +30,4 @@ class plagiarism_plagcheck_observer {
 		$plugin = new plagiarism_plugin_plagcheck();
 		$plugin->event_handler($eventdata);
 	}
-	public static function show_similarity(\mod_assign\event\grading_form_viewed $event) {
-		$eventdata = $event->get_data();
-		$eventdata['eventtype'] = 'assessable_submitted';
-		$eventdata['other']['modulename'] = 'assign';
-
-		$plugin = new plagiarism_plugin_plagcheck();
-		$plugin->event_handler($eventdata);
-	}
 }

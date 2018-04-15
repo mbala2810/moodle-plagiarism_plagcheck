@@ -13,14 +13,5 @@ $observers = array(
     array(
         'eventname' => '\mod_assign\event\assessable_submitted',
         'callback' => 'plagiarism_plagcheck_observer::assignsubmission_submitted'
-    ),
-    array(
-        'eventname' => '\mod_assign\event\grading_form_viewed',
-        'callback' => 'plagiarism_plagcheck_observer::show_similarity'
     )
-    /*
-    array(
-        'eventname' => '\mod_coursework\event\assessable_uploaded',
-        'callback' => 'plagiarism_plagcheck_observer::assessable_uploaded'
-    )*/
 );
