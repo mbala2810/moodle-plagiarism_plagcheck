@@ -1,5 +1,10 @@
 <?php
 
+/*
+	Copyright (C) Balasubramanian M. mbasubram@gmail.com
+	Copyright (C) Amogh Karve. amogh.karve@gmail.com
+*/
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify

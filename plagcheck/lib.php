@@ -1,5 +1,11 @@
 <?php
 
+
+/*
+	Copyright (C) Balasubramanian M. mbasubram@gmail.com
+	Copyright (C) Amogh Karve. amogh.karve@gmail.com
+*/
+
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -14,6 +20,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 
 require_once($CFG->dirroot.'/plagiarism/plagcheck/vendor/autoload.php');
 require_once($CFG->dirroot.'/plagiarism/lib.php');
