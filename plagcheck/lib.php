@@ -26,7 +26,6 @@ function getSimilarity($records) {
 		$max = 0;
 		$index = 0;
 		$hash1 = new Fingerprint(sizeof($record->simhash),$record->simhash);
-		//If the submitter has deleted his existing submission and added a new submission, so we have to delete the existing one.
 		$checkrecord = $DB->get_record('files', array('pathnamehash' => $record->identifier, 'component' => 'assignsubmission_file'));
 		if(!$checkrecord) {
 			$DB->delete_records('plagiarism_plagcheck', array('identifier' => $record->identifier));
@@ -60,7 +59,7 @@ function insertIntoTable($record) {
 	$plagiarismfile->identifier = $record->identifier;
 	$plagiarismfile->itemid = $record->itemid;
 	$plagiarismfile->statuscode = "graded";
-	$plagiarismfile->similarityscore = $record->similarityscore;
+	$plagiarismfile->similarityscore = $record->similarityscore * 100;
 	$plagiarismfile->simhash = $record->simhash;
 	$plagiarismfile->submissiontype = 'file';
 	$plagiarismfile->assignmentid = $record->assignmentid;
@@ -110,8 +109,8 @@ class plagiarism_plugin_plagcheck extends plagiarism_plugin {
 			$records = $DB->get_record('plagiarism_plagcheck', array('identifier' => $plagiarismfile->copyfilename));
 			$copiedfrom = $DB->get_record('user', array('id' => $records->userid));
 			$copyuser = $copiedfrom->firstname.' '.$copiedfrom->lastname;
-			$score = ($plagiarismfile->similarityscore * 100).'%'.'<br>'.($filename).'<br>'.($copyuser);
-	        $titlescore = ($plagiarismfile->similarityscore * 100).'% '.'<br>'.($filename).'<br>'.($copyuser).get_string('similarity', 'plagiarism_plagcheck');
+			$score = ($plagiarismfile->similarityscore).'%'.'<br>'.($filename).'<br>'.($copyuser);
+	        $titlescore = ($plagiarismfile->similarityscore).'% '.'<br>'.($filename).'<br>'.($copyuser).get_string('similarity', 'plagiarism_plagcheck');
 	        $class = 'score_colour_'.round($plagiarismfile->similarityscore, -1);
 			$orscorehtml = html_writer::tag('div', $score.$transmatch,
 	                                                array('title' => $titlescore));
